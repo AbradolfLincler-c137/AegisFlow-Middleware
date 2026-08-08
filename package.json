@@ -1,0 +1,27 @@
+{
+  "name": "aegisflow",
+  "version": "1.0.0",
+  "description": "AegisFlow — AI-powered web application firewall with real-time threat dashboard",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "store": "node ecommerce-app/server.js",
+    "dev:all": "start \"AegisFlow Dashboard\" cmd /k node src/app.js && start \"VaultStore\" cmd /k node ecommerce-app/server.js"
+  },
+  "dependencies": {
+    "axios": "^1.19.0",
+    "cors": "^2.8.6",
+    "express": "^4.21.0",
+    "http-proxy-middleware": "^4.2.0",
+    "onnxruntime-node": "^1.27.0",
+    "uuid": "^10.0.0"
+  },
+  "keywords": [
+    "security",
+    "waf",
+    "firewall",
+    "dashboard"
+  ],
+  "license": "MIT"
+}

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VaultStore — Premium Security Products</title>
+  <meta name="description" content="Shop the world's leading cybersecurity products. Protected by AegisFlow WAF.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="store.css">
+</head>
+<body>
+
+  <!-- ======== NAV ======== -->
+  <nav class="nav">
+    <div class="nav__brand">
+      <span class="nav__logo">🛒</span>
+      <span class="nav__name">VaultStore</span>
+      <span class="nav__tag">by AegisFlow</span>
+    </div>
+    <div class="nav__actions">
+      <div id="waf-pill" class="waf-pill waf-pill--on" title="WAF Protection Status">
+        <span class="waf-pill__dot"></span>
+        <span class="waf-pill__label">WAF ON</span>
+      </div>
+      <button class="nav__cart" onclick="openCart()">🛒 <span id="cart-count">0</span></button>
+      <button class="nav__login" onclick="openLogin()">Sign In</button>
+    </div>
+  </nav>
+
+  <!-- ======== HERO ======== -->
+  <section class="hero">
+    <div class="hero__content">
+      <h1 class="hero__title">Secure Your Digital World</h1>
+      <p class="hero__sub">Enterprise-grade cybersecurity products, powered by AI. Protected by AegisFlow WAF.</p>
+      <div class="hero__search">
+        <input id="search-input" class="hero__search-input" type="text" placeholder="Search products (try: ' OR 1=1 -- for demo…)" autocomplete="off">
+        <button class="hero__search-btn" onclick="searchProducts()">Search</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== WAF STATUS BANNER ======== -->
+  <div id="waf-banner" class="waf-banner waf-banner--on">
+    <span id="waf-banner-icon">🛡</span>
+    <span id="waf-banner-text">AegisFlow WAF is <strong>ACTIVE</strong> — All requests are inspected in real-time by CSIC-2010 ONNX Model</span>
+  </div>
+
+  <!-- ======== PRODUCTS ======== -->
+  <main class="main">
+    <div class="products-header">
+      <h2 class="products-title" id="products-title">Featured Products</h2>
+      <span class="products-count" id="products-count"></span>
+    </div>
+    <div class="products-grid" id="products-grid">
+      <div class="loading-spinner">Loading products…</div>
+    </div>
+  </main>
+
+  <!-- ======== AI ASSISTANT ======== -->
+  <section class="ai-section">
+    <div class="ai-card">
+      <div class="ai-header">
+        <span class="ai-icon">🤖</span>
+        <div>
+          <h3 class="ai-title">AI Shopping Assistant</h3>
+          <p class="ai-sub">Ask me anything about our products. <em>Prompt injection attacks are blocked by AegisFlow.</em></p>
+        </div>
+      </div>
+      <div class="ai-body">
+        <textarea id="ai-prompt" class="ai-textarea" placeholder="e.g. What's best for network security? (Try: Ignore previous instructions for demo)"></textarea>
+        <button class="ai-send-btn" onclick="sendAiPrompt()">Ask Assistant</button>
+      </div>
+      <div id="ai-response" class="ai-response" style="display:none"></div>
+    </div>
+  </section>
+
+  <!-- ======== LOGIN MODAL ======== -->
+  <div id="login-modal" class="modal" style="display:none">
+    <div class="modal__card">
+      <button class="modal__close" onclick="closeLogin()">✕</button>
+      <h2 class="modal__title">Sign In</h2>
+      <p class="modal__sub">Credential stuffing attacks are rate-limited by AegisFlow WAF.</p>
+      <input id="login-email" class="modal__input" type="email" placeholder="Email address">
+      <input id="login-password" class="modal__input" type="password" placeholder="Password">
+      <button class="modal__submit" onclick="doLogin()">Sign In</button>
+      <div id="login-result" class="modal__result"></div>
+    </div>
+  </div>
+
+  <!-- ======== CART MODAL ======== -->
+  <div id="cart-modal" class="modal" style="display:none">
+    <div class="modal__card">
+      <button class="modal__close" onclick="closeCart()">✕</button>
+      <h2 class="modal__title">Your Cart</h2>
+      <div id="cart-items" class="cart-items"></div>
+    </div>
+  </div>
+
+  <script src="store.js"></script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AegisFlow — Threat Intelligence Dashboard</title>
+  <meta name="description" content="Real-time security monitoring dashboard for AegisFlow WAF. Live threat feed, analytics, and hash-chain integrity verification.">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="dashboard.css">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin="" />
+
+  <!-- Favicon (inline SVG data URI) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23g)'/%3E%3Ctext x='50' y='68' text-anchor='middle' font-size='55' font-family='system-ui' fill='white'%3E🛡%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="dashboard">
+
+    <!-- ====== Header ====== -->
+    <header class="header">
+      <div class="header__brand">
+        <div class="header__logo">🛡</div>
+        <div>
+          <h1 class="header__title">AegisFlow</h1>
+          <p class="header__subtitle">Threat Intelligence Dashboard</p>
+        </div>
+      </div>
+      <div class="header__status">
+
+        <!-- ── WAF Toggle Control ── -->
+        <div class="waf-control" id="waf-control">
+
+          <!-- Glowing status badge -->
+          <div class="waf-badge waf-badge--on" id="waf-badge">
+            <span class="waf-badge__icon" id="waf-badge-icon">🛡</span>
+            <span class="waf-badge__text" id="waf-badge-text">ACTIVE SHIELD (PROTECTED)</span>
+          </div>
+
+          <!-- Toggle pill -->
+          <label class="toggle-switch" for="waf-toggle-input" title="Toggle WAF Protection">
+            <input type="checkbox" id="waf-toggle-input" checked>
+            <span class="toggle-slider"></span>
+          </label>
+
+        </div>
+
+        <div class="header__live-dot">Live Monitoring</div>
+      </div>
+    </header>
+
+    <!-- ====== Stats Cards ====== -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-card__label">Total Requests</div>
+        <div class="stat-card__value stat-card__value--total" id="stat-total">0</div>
+        <div class="stat-card__delta">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">Allowed</div>
+        <div class="stat-card__value stat-card__value--allow" id="stat-allowed">0</div>
+        <div class="stat-card__delta">Score 0–29</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">Rate-Limited</div>
+        <div class="stat-card__value stat-card__value--rate-limit" id="stat-rate-limited">0</div>
+        <div class="stat-card__delta">Score 30–59</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__label">Blocked</div>
+        <div class="stat-card__value stat-card__value--block" id="stat-blocked">0</div>
+        <div class="stat-card__delta">Score 60–100</div>
+      </div>
+    </section>
+
+    <!-- ====== Charts ====== -->
+    <section class="charts-grid">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">
+            <span class="panel__title-icon">📊</span>
+            Threat Categories
+          </div>
+        </div>
+        <div class="panel__body">
+          <div class="chart-container">
+            <canvas id="category-chart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">
+            <span class="panel__title-icon">📈</span>
+            Decisions Overview
+          </div>
+        </div>
+        <div class="panel__body">
+          <div class="chart-container">
+            <canvas id="decision-chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== Threat Map ====== -->
+    <section class="map-section">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">
+            <span class="panel__title-icon">🌐</span>
+            Threat Origin Map
+            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 400; margin-left: 8px;">
+              Simulated geolocation — jittered by IP hash
+            </span>
+          </div>
+        </div>
+        <div class="panel__body" style="padding: 0;">
+          <div id="threat-map"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== Verify Integrity ====== -->
+    <section class="verify-section">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">
+            <span class="panel__title-icon">🔗</span>
+            Hash-Chain Integrity Verification
+          </div>
+        </div>
+        <div class="panel__body">
+          <div>
+            <button class="verify-btn" id="verify-btn">
+              <span class="spinner"></span>
+              <span class="btn-text">⛓ Verify Log Integrity</span>
+            </button>
+            <button class="verify-btn" id="reset-chain-btn" style="margin-left: 10px; background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">
+              <span class="btn-text">🔄 Reset Chain</span>
+            </button>
+            <p class="verify-info" style="margin-top: 10px;">
+              Walks the SHA-256 hash chain across all logged events. If any entry has been tampered with, modified, or deleted, the chain breaks.
+            </p>
+          </div>
+          <div class="verify-result" id="verify-result"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== Live Feed ====== -->
+    <section class="live-feed">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">
+            <span class="panel__title-icon">📡</span>
+            Live Request Feed
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Last 20 requests • Auto-refresh 2s</span>
+        </div>
+        <div class="panel__body" style="padding: 0; overflow-x: auto;">
+          <table class="feed-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Method</th>
+                <th>Path</th>
+                <th>IP</th>
+                <th>Score</th>
+                <th>Category</th>
+                <th>Decision</th>
+              </tr>
+            </thead>
+            <tbody id="feed-body">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  Waiting for incoming requests…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== Real-Time Data Leak Exfiltration Console ====== -->
+    <section class="leak-console-section" style="margin-bottom: 2rem;">
+      <div class="panel" style="border-color: rgba(239, 68, 68, 0.3);">
+        <div class="panel__header" style="background: rgba(239, 68, 68, 0.05); display: flex; justify-content: space-between; align-items: center;">
+          <div class="panel__title" style="color: var(--color-block);">
+            <span class="panel__title-icon">🚨</span>
+            Real-Time Exfiltrated Data Leaks
+            <span id="leak-count-badge" style="margin-left: 10px; font-size: 0.75rem; background: rgba(239,68,68,0.2); color: #f87171; padding: 2px 10px; border-radius: 100px; border: 1px solid rgba(239,68,68,0.4); font-family: var(--font-mono);">
+              0 Data Leaks Detected
+            </span>
+          </div>
+          <button id="clear-leaks-btn" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: var(--text-muted); padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;">
+            Clear Leak Buffer
+          </button>
+        </div>
+        <div class="panel__body" style="padding: 0; overflow-x: auto;">
+          <div id="leak-feed-container" style="max-height: 280px; overflow-y: auto; padding: 1rem; font-family: var(--font-mono); font-size: 0.8rem;">
+            <div style="text-align: center; color: var(--color-allow); padding: 20px;">
+              🛡 0 Data Leaks -- WAF Protection active or no successful exfiltrations recorded.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== GPS / Geo-Telemetry Panel ====== -->
+    <section class="geo-section">
+      <div class="panel">
+        <div class="panel__header">
+          <div class="panel__title">
+            <span class="panel__title-icon">📡</span>
+            Live Geo-Telemetry
+            <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 400; margin-left: 8px;">
+              Browser-reported GPS coords • Permission required on first load
+            </span>
+          </div>
+          <span id="geo-status" style="font-size: 0.75rem; color: var(--text-muted);">Awaiting permission…</span>
+        </div>
+        <div class="panel__body">
+          <div class="geo-grid">
+            <div class="geo-stat">
+              <div class="geo-stat__label">Latitude</div>
+              <div class="geo-stat__value" id="geo-lat">—</div>
+            </div>
+            <div class="geo-stat">
+              <div class="geo-stat__label">Longitude</div>
+              <div class="geo-stat__value" id="geo-lng">—</div>
+            </div>
+            <div class="geo-stat">
+              <div class="geo-stat__label">Accuracy</div>
+              <div class="geo-stat__value" id="geo-acc">—</div>
+            </div>
+            <div class="geo-stat">
+              <div class="geo-stat__label">Last Fix</div>
+              <div class="geo-stat__value" id="geo-time">—</div>
+            </div>
+          </div>
+          <div id="geo-trail-list" style="margin-top:1rem; max-height: 120px; overflow-y:auto; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted);"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ====== Scripts ====== -->
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+
+  <!-- Dashboard logic -->
+  <script src="dashboard.js"></script>
+</body>
+</html>
